@@ -3,7 +3,17 @@
 用于快速设置 / 优化 Windows 10 / 11 的图形化助手工具。
 采用 .NET 10 + WinUI 3（Windows App SDK）与 MVVM 架构。
 
-<img width="2868" height="1510" alt="image" src="https://github.com/user-attachments/assets/08e0c771-3b6a-444f-9eec-0f7cf5008c2a" />
+## 功能截图
+
+<p align="center">
+    <img src="docs/screenshots/system-settings.png" alt="系统设置页面" width="49%">
+    <img src="docs/screenshots/file-explorer.png" alt="资源管理器页面" width="49%">
+</p>
+
+<p align="center">
+    <img src="docs/screenshots/privacy.png" alt="隐私设置页面" width="49%">
+    <img src="docs/screenshots/edge-management.png" alt="Edge 管理页面" width="49%">
+</p>
 
 > 开发与架构说明见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
@@ -121,8 +131,8 @@ dotnet publish src/Win11EasyConfig.App/Win11EasyConfig.App.csproj -c Release
 
 ### 发布新版本
 
-在 GitHub 仓库页面进入 **Actions → 发布新版本 → Run workflow**，填写版本号（如 `1.2.0`，可勾选
-「预发布」）即可；推送形如 `v1.2.0` 的标签也会触发。工作流在 `windows-latest` 上执行上述两条发布
+在 GitHub 仓库页面进入 **Actions → 发布新版本 → Run workflow**，填写版本号（如 `1.3.0`，可勾选
+「预发布」）即可；推送形如 `v1.3.0` 的标签也会触发。工作流在 `windows-latest` 上执行上述两条发布
 命令并打包为两个 zip，随后自动创建 GitHub Release，无需本地操作。
 
 ## 注意事项
