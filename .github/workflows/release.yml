@@ -1,0 +1,89 @@
+name: 发布新版本
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 版本号（例如 1.3.0）
+        required: true
+        default: 1.3.0
+        type: string
+      prerelease:
+        description: 标记为预发布版本
+        required: false
+        default: false
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: 验证版本号
+        id: version
+        shell: pwsh
+        env:
+          REQUESTED_VERSION: ${{ inputs.version || github.ref_name }}
+        run: |
+          $version = $env:REQUESTED_VERSION -replace '^v', ''
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Invalid release version: $version"
+          }
+          "value=$version" >> $env:GITHUB_OUTPUT
+
+      - name: 发布独立版
+        run: >-
+          dotnet publish src/Win11EasyConfig.App/Win11EasyConfig.App.csproj
+          -c Release -r win-x64 --self-contained true
+          -p:WindowsAppSDKSelfContained=true -p:DebugType=none
+          "-p:Version=${{ steps.version.outputs.value }}"
+          -o publish/standalone
+
+      - name: 发布精简版
+        run: >-
+          dotnet publish src/Win11EasyConfig.App/Win11EasyConfig.App.csproj
+          -c Release -r win-x64 --self-contained false
+          -p:WindowsAppSDKSelfContained=false -p:DebugType=none
+          "-p:Version=${{ steps.version.outputs.value }}"
+          -o publish/runtime-dependent
+
+      - name: 打包发布文件
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          Compress-Archive -Path publish/standalone/* -DestinationPath "Win11EasyConfig-$env:VERSION-win-x64-standalone.zip"
+          Compress-Archive -Path publish/runtime-dependent/* -DestinationPath "Win11EasyConfig-$env:VERSION-win-x64-runtime-dependent.zip"
+
+      - name: 创建 GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        run: |
+          $releaseArgs = @(
+            "v$env:VERSION",
+            "Win11EasyConfig-$env:VERSION-win-x64-standalone.zip",
+            "Win11EasyConfig-$env:VERSION-win-x64-runtime-dependent.zip",
+            '--title', "Windows11 轻松设置 v$env:VERSION",
+            '--generate-notes',
+            '--target', $env:GITHUB_SHA
+          )
+          if ($env:PRERELEASE -eq 'true') {
+            $releaseArgs += '--prerelease'
+          }
+          gh release create @releaseArgs
