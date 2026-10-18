@@ -1,0 +1,26 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# Publish / release staging output
+publish/
+dist/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+packages/
+
+# Test run artifacts
+TestResults/
+
+# OS
+Thumbs.db
+desktop.ini

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Win11EasyConfig.App.Views.EdgePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006">
+
+    <ScrollViewer Padding="28,12,28,24" VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="12">
+            <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Edge 管理" />
+            <TextBlock
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Style="{StaticResource BodyTextBlockStyle}"
+                TextWrapping="Wrap"
+                Text="安装或更新各通道的 Microsoft Edge 与 WebView2 运行时，或禁止 Edge 自动更新。安装程序需要联网下载。" />
+
+            <Border
+                Padding="20,16"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid ColumnDefinitions="200,*,Auto" RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Text="Edge 稳定版" />
+                    <TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.StableStatus, Mode=OneWay}" />
+                    <Button Grid.Row="0" Grid.Column="2" Command="{x:Bind ViewModel.InstallStableCommand}" Content="安装/更新" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Text="Edge Beta" />
+                    <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.BetaStatus, Mode=OneWay}" />
+                    <Button Grid.Row="1" Grid.Column="2" Command="{x:Bind ViewModel.InstallBetaCommand}" Content="安装/更新" />
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Text="Edge Dev" />
+                    <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.DevStatus, Mode=OneWay}" />
+                    <Button Grid.Row="2" Grid.Column="2" Command="{x:Bind ViewModel.InstallDevCommand}" Content="安装/更新" />
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Text="Edge Canary" />
+                    <TextBlock Grid.Row="3" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.CanaryStatus, Mode=OneWay}" />
+                    <Button Grid.Row="3" Grid.Column="2" Command="{x:Bind ViewModel.InstallCanaryCommand}" Content="安装/更新" />
+
+                    <TextBlock Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Text="全局 WebView2" />
+                    <TextBlock Grid.Row="4" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.GlobalWebView2Status, Mode=OneWay}" />
+                    <StackPanel Grid.Row="4" Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                        <Button Command="{x:Bind ViewModel.InstallWebView2Command}" Content="安装/更新" />
+                        <Button Command="{x:Bind ViewModel.UninstallGlobalWebView2Command}" Content="卸载" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Text="当前用户 WebView2" />
+                    <TextBlock Grid.Row="5" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ViewModel.UserWebView2Status, Mode=OneWay}" />
+                </Grid>
+            </Border>
+
+            <Border
+                Padding="16,12"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Style="{StaticResource BodyStrongTextBlockStyle}" Text="禁用 Edge 启动增强" />
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Style="{StaticResource CaptionTextBlockStyle}" TextWrapping="Wrap" Text="通过策略关闭 StartupBoost，Edge 不再常驻后台。" />
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" MinWidth="0" IsOn="{x:Bind ViewModel.StartupBoostDisabled, Mode=TwoWay}" OffContent="" OnContent="" />
+                </Grid>
+            </Border>
+
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Command="{x:Bind ViewModel.DisableAutoUpdateCommand}" Content="禁止 Edge 自动更新" />
+                <Button Command="{x:Bind ViewModel.LoadCommand}" Content="刷新状态" />
+                <muxc:ProgressRing Width="20" Height="20" IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+            </StackPanel>
+
+            <muxc:InfoBar
+                IsClosable="True"
+                IsOpen="{x:Bind ViewModel.HasMessage, Mode=OneWay}"
+                Severity="Informational"
+                Message="{x:Bind ViewModel.Message, Mode=OneWay}" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

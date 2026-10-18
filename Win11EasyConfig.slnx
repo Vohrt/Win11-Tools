@@ -1,0 +1,21 @@
+<Solution>
+  <!-- Both projects target x64 only (see Directory.Build.props). The solution platform and the
+       per-project <Platform Project="x64" /> mappings must match, otherwise Visual Studio tries
+       to map the default "Any CPU" and reports a missing project configuration. -->
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/Win11EasyConfig.App/Win11EasyConfig.App.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="src/Win11EasyConfig.Core/Win11EasyConfig.Core.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Win11EasyConfig.Core.Tests/Win11EasyConfig.Core.Tests.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+</Solution>
