@@ -109,10 +109,6 @@ factory.Policy(
 
 ## 生成与运行
 
-> 两个项目均只支持 **x64**（见 `Directory.Build.props`）。解决方案 `Win11EasyConfig.slnx`
-> 已显式声明 `x64` 平台以及每个项目的 `<Platform Project="x64" />` 映射——若缺少这些映射，
-> Visual Studio 会尝试按默认的 “Any CPU” 去匹配，从而报「project configuration does not exist」。
-
 ```powershell
 # 生成整个解决方案
 dotnet build Win11EasyConfig.slnx -c Release
@@ -129,11 +125,6 @@ dotnet publish src/Win11EasyConfig.App/Win11EasyConfig.App.csproj -c Release
 | `Win11EasyConfig-<版本>-win-x64-standalone.zip` | **独立版**：内置 .NET 与 Windows App SDK 运行时，无需任何环境即可运行 | ~70 MB |
 | `Win11EasyConfig-<版本>-win-x64-runtime-dependent.zip` | **精简版**：不含运行时，需目标机器安装 [.NET 10 桌面运行时](https://dotnet.microsoft.com/download/dotnet/10.0) 与 [Windows App SDK 运行时](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) | ~10 MB |
 
-### 发布新版本
-
-在 GitHub 仓库页面进入 **Actions → 发布新版本 → Run workflow**，填写版本号（如 `1.3.0`，可勾选
-「预发布」）即可；推送形如 `v1.3.0` 的标签也会触发。工作流在 `windows-latest` 上执行上述两条发布
-命令并打包为两个 zip，随后自动创建 GitHub Release，无需本地操作。
 
 ## 注意事项
 
