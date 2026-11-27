@@ -13,7 +13,10 @@ internal static class ExplorerExtras
 {
     private const string AdvancedKey = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced";
     private const string SearchKey = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Search";
-    private const string ClassicMenuKey = @"HKEY_CURRENT_USER\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}";
+    private const string UserClasses = @"HKEY_CURRENT_USER\Software\Classes\";
+    private const string MachineClasses = @"HKEY_LOCAL_MACHINE\Software\Classes\";
+    private const string OriginalMenu = @"CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32";
+    private const string UpdatedMenu = @"CLSID\{51668040-5e31-4023-bbe3-149163bd80f1}\InprocServer32";
 
     public static IEnumerable<IChoiceSetting> CreateChoices(
         IRegistryService registry,
@@ -26,36 +29,7 @@ internal static class ExplorerExtras
             fallbackIndex: 0,
             deleteValueForIndex: 0);
 
-        yield return new DelegateChoiceSetting(
-            "explorer.rightClickMenu", "右键菜单风格", TweakCategory.Explorer,
-            [new ChoiceOption("Win11 现代菜单", 0), new ChoiceOption("Win10 经典菜单", 1)],
-            read: () => Task.FromResult(
-                registry.GetString($@"{ClassicMenuKey}\InprocServer32", string.Empty) is not null ? 1 : 0),
-            write: index =>
-            {
-                try
-                {
-                    if (index == 1)
-                    {
-                        registry.SetString($@"{ClassicMenuKey}\InprocServer32", string.Empty, string.Empty);
-                    }
-                    else
-                    {
-                        registry.DeleteKeyTree(ClassicMenuKey);
-                    }
-
-                    shell.RestartExplorer();
-                    return Task.FromResult(TweakApplyResult.Ok());
-                }
-                catch (Exception ex)
-                {
-                    return Task.FromResult(TweakApplyResult.Fail(ex.Message));
-                }
-            })
-        {
-            Description = "切换 Win11 的精简右键菜单与 Win10 的完整经典菜单。",
-            Effect = EffectScope.RestartExplorer
-        };
+        yield return CreateRightClickMenu(registry, shell.RestartExplorer);
 
         yield return new RegistryChoiceSetting(
             "taskbar.searchBox", "搜索按钮", TweakCategory.Taskbar, registry,
@@ -93,6 +67,75 @@ internal static class ExplorerExtras
             AdvancedKey, "Start_Layout",
             [new ChoiceOption("三行（默认）", 0), new ChoiceOption("一行", 1), new ChoiceOption("四行", 2)],
             fallbackIndex: 0);
+    }
+
+    internal static IChoiceSetting CreateRightClickMenu(IRegistryService registry, Action restartExplorer)
+    {
+        // Older Explorer versions only register the original context menu handler.
+        string[] handlers = registry.GetString(MachineClasses + UpdatedMenu, "") is { Length: > 0 }
+            ? [OriginalMenu, UpdatedMenu]
+            : [OriginalMenu];
+
+        int ReadIndex()
+        {
+            int overrides = handlers.Count(handler => registry.GetString(UserClasses + handler, "") == "");
+            if (overrides == 0)
+            {
+                return 0;
+            }
+
+            // A partial override has no matching option. Let either choice repair it.
+            return overrides == handlers.Length ? 1 : -1;
+        }
+
+        return new DelegateChoiceSetting(
+            "explorer.rightClickMenu", "右键菜单风格", TweakCategory.Explorer,
+            [new ChoiceOption("Win11 现代菜单", 0), new ChoiceOption("Win10 经典菜单", 1)],
+            read: () => Task.FromResult(ReadIndex()),
+            write: index =>
+            {
+                try
+                {
+                    if (index is not (0 or 1))
+                    {
+                        return Task.FromResult(TweakApplyResult.Fail("无效的选项。"));
+                    }
+
+                    if (index == 1 && handlers.Any(handler => registry.GetString(UserClasses + handler, "") is { Length: > 0 }))
+                    {
+                        return Task.FromResult(TweakApplyResult.Fail("当前用户已注册自定义右键菜单组件，请先确认该组件的设置。"));
+                    }
+
+                    foreach (string handler in handlers)
+                    {
+                        string path = UserClasses + handler;
+                        if (index == 1)
+                        {
+                            registry.SetString(path, "", "");
+                        }
+                        else if (registry.GetString(path, "") == "")
+                        {
+                            registry.DeleteValue(path, "");
+                        }
+                    }
+
+                    if (ReadIndex() != index)
+                    {
+                        return Task.FromResult(TweakApplyResult.Fail("右键菜单设置未完全应用，请重试。"));
+                    }
+
+                    restartExplorer();
+                    return Task.FromResult(TweakApplyResult.Ok());
+                }
+                catch (Exception ex)
+                {
+                    return Task.FromResult(TweakApplyResult.Fail(ex.Message));
+                }
+            })
+        {
+            Description = "切换 Win11 的精简菜单与 Win10 的经典菜单。若当前选项为空，请重新选择所需样式。",
+            Effect = EffectScope.RestartExplorer
+        };
     }
 
     public static IEnumerable<IActionCommand> CreateActions(ICommandRunner runner, ShellService shell)
